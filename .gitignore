@@ -1,0 +1,24 @@
+# IDE
+.idea/
+.vscode/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+*.egg-info/
+
+# Virtual Environment
+venv/
+env/
+.env
+
+# 如果某些文件夹不想提交，取消下面的注释
+# outside/
+# asset/temp/
+
+# OS
+.DS_Store
+Thumbs.db
