@@ -3,16 +3,30 @@ import re
 def extract_inductance_code_from_part_number(part_number: str) -> str:
     """
     从完整料号（如 'SPA0550-R50M-BA'）中提取电感编码部分（如 'R50M'）
-    规则：按 '-' 分割，取**第一个符合电感编码特征的段**
+    规则：按 '-' 分割，优先匹配正则，其次匹配含 R/L/UH/NH/MH 的段，最后回退到 parts[-2]
     """
-    if not part_number or '-' not in part_number:
-        return part_number.strip()
-    parts = part_number.split('-')
+    if not part_number:
+        return ""
+    part_number = part_number.strip()
+    parts = part_number.split("-")
+
+    if len(parts) == 1:
+        return part_number
+
+    if len(parts) == 2:
+        return parts[1].strip().upper()
+
+    # len(parts) >= 3：优先正则，其次关键词回退
+    INDUCTANCE_KEYWORDS = ("R", "L", "UH", "NH", "MH")
     for part in parts[1:]:
         clean_part = part.strip().upper()
-        if re.match(r'^[0-9]*R?[0-9]+[A-Z]$', clean_part):
+        if re.match(r"^[0-9]*R?[0-9]+[A-Z]$", clean_part):
             return clean_part
-    raise ValueError(f"无法从料号 '{part_number}' 中识别电感编码段")
+    for part in parts[1:]:
+        clean_part = part.strip().upper()
+        if any(kw in clean_part for kw in INDUCTANCE_KEYWORDS):
+            return clean_part
+    return parts[-2].strip().upper()
 
 def parse_inductance_code(code: str) -> dict:
     """

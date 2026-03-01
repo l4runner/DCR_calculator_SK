@@ -7,11 +7,21 @@ from PySide6.QtCore import Qt, QTimer, QRectF
 from PySide6.QtGui import QPainter, QColor, QLinearGradient, QFont, QPainterPath
 
 
-class SmoothBlueCyanGlow_title(QWidget):
-    def __init__(self, text="XIAOLAN", parent=None):
+class SmoothBlueCyanGlowTitle(QWidget):
+    """蓝青渐变发光标题组件，可配置尺寸与字体"""
+
+    def __init__(
+        self,
+        text: str = "XIAOLAN",
+        font_size: int = 18,
+        width: int = 270,
+        height: int = 70,
+        parent=None,
+    ):
         super().__init__(parent)
         self.text = text
-        self.setFixedSize(250, 60)
+        self.font_size = font_size
+        self.setFixedSize(width, height)
         self.setAttribute(Qt.WA_TranslucentBackground)
         self.light_phase = 0.0
         self.glow_phase = 0.0
@@ -66,9 +76,13 @@ class SmoothBlueCyanGlow_title(QWidget):
         text_rect = QRectF(0, 0, w, h)
 
         painter.setPen(QColor(255, 255, 255))
-        font = QFont("Microsoft YaHei", 13, QFont.Bold)
+        font = QFont("Microsoft YaHei", self.font_size, QFont.Bold)
         painter.setFont(font)
         painter.drawText(text_rect, Qt.AlignCenter, self.text)
+
+
+# 兼容旧命名
+SmoothBlueCyanGlow_title = SmoothBlueCyanGlowTitle
 
 
 class DemoWindow(QWidget):
@@ -80,7 +94,7 @@ class DemoWindow(QWidget):
         layout = QVBoxLayout()
         layout.setAlignment(Qt.AlignCenter)
 
-        self.btn = SmoothBlueCyanGlow_title("XIAOLAN")
+        self.btn = SmoothBlueCyanGlowTitle("XIAOLAN")
         layout.addWidget(self.btn)
 
         self.setLayout(layout)

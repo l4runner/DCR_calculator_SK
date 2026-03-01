@@ -1,25 +1,24 @@
-import math
 import sys
 import os
 
-from PySide6.QtCore import QRectF, QTimer, QDateTime
-from PySide6.QtGui import Qt, QLinearGradient, QColor, QPainterPath, QFont, QPainter, QIcon
-from PySide6.QtWidgets import QApplication, QWidget, QLabel, QVBoxLayout, QSizePolicy, \
-    QHBoxLayout, QPushButton
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QIcon
+from PySide6.QtWidgets import QApplication, QWidget, QLabel, QVBoxLayout, QSizePolicy, QHBoxLayout, QPushButton
 
-from source import (
-    extract_product_size_from_part_number,
-    parse_coil_spec,
-    calculate_dcr_with_inferred_flange,
-    reverse_engineer_wire_thickness,
-    parse_inductance_code,
-    Reverse_coil_turns
+from source.calculator_service import (
+    perform_dcr_calculation,
+    perform_target_calculation,
+    format_primary_display,
+    format_target_display,
+    format_error_display,
+    format_no_target_display,
+    format_input_error_display,
+    format_target_calculation_error,
 )
-
+from shining_glow_title import SmoothBlueCyanGlowTitle
 from FloatingBotton import FloatingLabel_Btn
 from UnderlineEdit import UnderlineEdit
 from ResultCard import ResultCard
-from icon_loader import icon_loader
 from floating_preset_label import FloatingPresetLabel
 
 current_dir = os.path.dirname(__file__)
@@ -46,78 +45,6 @@ def create_title_widgets(parent):
             }""")
     return f_biao_ti
 
-class SmoothBlueCyanGlowTitle(QWidget):
-    def __init__(self, text="XIAO_LAN", font_size=24,parent=None):
-        super().__init__(parent)
-        self.text = text
-        self.setFixedSize(270, 70)
-        self.setAttribute(Qt.WA_TranslucentBackground)
-        self.setMaximumHeight(100)
-        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-
-        self.light_phase = 0.0
-        self.glow_phase = 0.0
-
-        self.anim_timer = QTimer(self)
-        self.anim_timer.timeout.connect(self._update_animation)
-        self.anim_timer.start(40)
-
-    def _update_animation(self):
-        self.light_phase += 0.015
-        if self.light_phase > 1.0:
-            self.light_phase -= 1.0
-
-        self.glow_phase += 0.08
-        if self.glow_phase > 6.28:
-            self.glow_phase -= 6.28
-
-        self.update()
-
-    def paintEvent(self, event):
-        painter = QPainter(self)
-        painter.setRenderHint(QPainter.Antialiasing)
-
-        w, h = self.width(), self.height()
-        inner_rect = QRectF(5, 5, w - 10, h - 10)
-
-        light_t = self.light_phase
-
-        if light_t < 0.5:
-            color_t = light_t * 2
-        else:
-            color_t = 2.0 - light_t * 2
-
-        color_blue = (35, 100, 255)
-        color_cyan = (0, 180, 180)
-
-        r = int(color_blue[0] * (1 - color_t) + color_cyan[0] * color_t)
-        g = int(color_blue[1] * (1 - color_t) + color_cyan[1] * color_t)
-        b = int(color_blue[2] * (1 - color_t) + color_cyan[2] * color_t)
-
-        angle_deg = (light_t * 360) % 360
-        rad = math.radians(angle_deg)
-
-        dx = math.cos(rad) * w
-        dy = math.sin(rad) * h
-
-        gradient = QLinearGradient(w / 2, h / 2, w / 2 + dx, h / 2 + dy)
-        gradient.setColorAt(0, QColor(r, g, b))
-        gradient.setColorAt(1, QColor(
-            int(color_cyan[0] * (1 - color_t) + color_blue[0] * color_t),
-            int(color_cyan[1] * (1 - color_t) + color_blue[1] * color_t),
-            int(color_cyan[2] * (1 - color_t) + color_blue[2] * color_t)
-        ))
-
-        bg_path = QPainterPath()
-        bg_path.addRoundedRect(inner_rect, 25, 25)
-        painter.fillPath(bg_path, gradient)
-
-        text_rect = QRectF(0, 0, w, h)
-
-        painter.setPen(QColor(255, 255, 255))
-        font = QFont("Microsoft YaHei", 18, QFont.Bold)
-        painter.setFont(font)
-        painter.drawText(text_rect, Qt.AlignCenter, self.text)
 
 class XIAO_LAN_Window(QWidget):
     def __init__(self):
@@ -125,7 +52,6 @@ class XIAO_LAN_Window(QWidget):
         self.setWindowIcon(QIcon(icon_path))
         self.result_card = ResultCard(self)
         self.initUI()
-        self.apply_icons()
         self.create_right_floating_labels()
 
     def initUI(self):
@@ -141,7 +67,7 @@ class XIAO_LAN_Window(QWidget):
         title_layout = QVBoxLayout(title_widget)
         title_layout.setContentsMargins(0, 0, 0, 0)
 
-        self.title_label = SmoothBlueCyanGlowTitle("DCR计算器")
+        self.title_label = SmoothBlueCyanGlowTitle("DCR计算器", font_size=18, width=270, height=70)
         title_layout.addWidget(self.title_label, alignment=Qt.AlignCenter)
 
         subtitle_label = create_title_widgets(self)
@@ -196,25 +122,13 @@ class XIAO_LAN_Window(QWidget):
 
     def apply_preset_spec(self, spec):
         """应用预设规格"""
-        if hasattr(self, 'spec_edit'):
+        if hasattr(self, "spec_edit"):
             self.spec_edit.setText(spec)
-            self.show_preset_applied_effect()
+            self._show_preset_applied_effect()
 
-    def apply_icons(self):
-        """应用所有图标"""
-        available = icon_loader.list_available_icons()
-        print("可用图标:")
-        for name, filename in available:
-            print(f"  {name}: {filename}")
-        if hasattr(self, 'btn_calculate'):
-            self.btn_calculate.setIcon(icon_loader.get_icon('math', 32))
-        if hasattr(self, 'btn_reset'):
-            self.btn_reset.setIcon(icon_loader.get_icon('calculator_off', 24))
-        if hasattr(self, 'action_save'):
-            self.action_save.setIcon(icon_loader.get_icon('calculate'))
-        if hasattr(self, 'logo_label'):
-            pixmap = icon_loader.get_pixmap('aquarius', 100, 100)
-            self.logo_label.setPixmap(pixmap)
+    def _show_preset_applied_effect(self):
+        """预设应用后的视觉反馈（可扩展为动画/提示）"""
+        pass
 
     def on_calculate(self):
         try:
@@ -224,26 +138,27 @@ class XIAO_LAN_Window(QWidget):
                 has_target = bool(target_number and target_dcr is not None)
             except ValueError as target_error:
                 has_target = False
-                text2 = self.build_input_error_display(target_error)
+                text2 = format_input_error_display(str(target_error))
                 self.display_partial_results(text1=None, text2=text2, show_card=True)
                 return
-            result_data_1 = self.perform_calculation(part_number, spec_str)
-            text1 = self.build_primary_display(result_data_1)
+
+            result_data_1 = perform_dcr_calculation(part_number, spec_str)
+            text1 = format_primary_display(result_data_1)
 
             if has_target:
                 try:
-                    result_data_2 = self.perform_calculation_card2(
+                    result_data_2 = perform_target_calculation(
                         part_number, spec_str, target_number, target_dcr
                     )
-                    text2 = self.build_primary_display_card2(result_data_2)
+                    text2 = format_target_display(result_data_2)
                 except Exception as e:
-                    text2 = self.build_target_calculation_error(str(e))
+                    text2 = format_target_calculation_error(str(e))
             else:
-                text2 = self.build_no_target_input_display()
+                text2 = format_no_target_display()
             self.display_partial_results(text1, text2, show_card=True)
 
         except Exception as ex:
-            error_html = self.build_error_display(str(ex))
+            error_html = format_error_display(str(ex))
             self.display_partial_results(error_html, "", show_card=True)
 
     def get_and_validate_inputs(self):
@@ -272,133 +187,6 @@ class XIAO_LAN_Window(QWidget):
 
         return target_number, target_dcr
 
-    def perform_calculation(self, part_number, spec_str):
-        """执行计算，返回所有数据"""
-        try:
-            product_size = extract_product_size_from_part_number(part_number)
-            coil = parse_coil_spec(spec_str)
-
-            dcr_nom, dcr_min, dcr_max = calculate_dcr_with_inferred_flange(coil, product_size)
-
-            dcr_nom_m = dcr_nom * 1000
-            dcr_min_m = dcr_min * 1000
-            dcr_max_m = dcr_max * 1000
-
-            return {
-                'part_number': part_number,
-                'spec_str': spec_str,
-                'product_size': product_size,
-                'coil': coil,
-                'wire_thickness': coil.wire_thickness_mm,  #  线厚
-                'wire_width': coil.wire_width_mm,  #  线宽
-                'inner_diameter': coil.inner_diameter_mm,  #  内径
-                'turns': coil.turns,  #  圈数
-                'dcr_nom_m': dcr_nom_m,
-                'dcr_min_m': dcr_min_m,
-                'dcr_max_m': dcr_max_m,
-                'timestamp': QDateTime.currentDateTime()
-            }
-        except Exception as e:
-            raise ValueError(f"计算过程出错: {str(e)}")
-
-    def perform_calculation_card2(self, part_number, spec_str, target_number, target_dcr):
-        """执行计算，返回所有数据"""
-        try:
-            product_size = extract_product_size_from_part_number(part_number)
-            product_size1 = extract_product_size_from_part_number(target_number)
-
-            def extract_inductance_code(full_part_number):
-                """从零件号中提取电感编码部分"""
-                parts = full_part_number.split('-')
-
-                if len(parts) == 1:
-                    return parts[0]
-                elif len(parts) == 2:
-                    return parts[1]
-                elif len(parts) >= 3:
-                    for part in parts[1:]:
-                        if any(keyword in part.upper() for keyword in ['R', 'L', 'UH', 'NH', 'MH']):
-                            return part
-                    return parts[-2]
-                return ""
-
-            inductance_part1 = extract_inductance_code(part_number)
-            inductance_part2 = extract_inductance_code(target_number)
-
-            result_inductance1 = parse_inductance_code(inductance_part1)
-            result_inductance2 = parse_inductance_code(inductance_part2)
-
-            cnp_ent = result_inductance2['value_uh'], result_inductance1['value_uh']
-
-            coil = parse_coil_spec(spec_str)
-            n2e = Reverse_coil_turns(coil, cnp_ent)
-            n3e, approximate_dcr = reverse_engineer_wire_thickness(
-                coil, product_size1, target_dcr, n2e
-            )
-            # print(f"调试信息:")
-            # print(f"  目标DCR: {target_dcr}")
-            # print(f"  计算出的近似DCR: {approximate_dcr}")
-            # print(f"  差值: {abs(float(approximate_dcr) - float(target_dcr))}")
-            return {
-                'target_number': target_number,
-                'product_size': product_size,
-                'coil': coil,
-                'wire_thickness': n3e,
-                'wire_width': coil.wire_width_mm,
-                'inner_diameter': coil.inner_diameter_mm,
-                'approximate_dcr': approximate_dcr,
-                'new_turns': n2e,
-                'timestamp': QDateTime.currentDateTime()
-            }
-        except Exception as e:
-            raise ValueError(f"计算过程出错: {str(e)}")
-
-    def build_primary_display(self, data):
-        """构建主要显示内容（DCR结果）"""
-        return (
-            f'<div style="text-align: center;">'
-            f'<span style="color:#4CAF50; font-weight:bold; font-size:24px;">'
-            f'DCR(P2): {data["dcr_nom_m"]:.3f} mΩ</span><br><br>'
-
-            f'<span style="color:#4CAF50; font-size:12px;">DCR±5%:</span> '
-            f'<span style="color:#e0e0e0; font-size:12px;">'
-            f'{data["dcr_min_m"]:.3f} ~ {data["dcr_max_m"]:.3f} mΩ</span><br>'
-
-            f'<span style="color:#4CAF50; font-size:12px;">参考料号:</span> '
-            f'<span style="color:#e0e0e0; font-size:12px;">{data["part_number"]}</span>'
-            f'</div>'
-        )
-
-    def build_primary_display_card2(self, data2):
-        """构建第二个显示内容（预测结果）"""
-        if data2.get('wire_thickness'):
-            return (
-                f'<div style="text-align: center;">'
-                f'<span style="color:#4CAF50; font-weight:bold; font-size:18px;">'
-                f'预估线圈规格: {data2["wire_thickness"]:.2f}*{data2["wire_width"]:.2f}*'
-                f'{data2["inner_diameter"]:.2f}*{data2["new_turns"]:.2f}T</span><br><br>'
-
-                f'<span style="color:#4CAF50; font-size:12px;">目标料号:</span> '
-                f'<span style="color:#e0e0e0; font-size:12px;">{data2["target_number"]}</span><br>'
-
-                f'<span style="color:#4CAF50; font-size:12px;">目标DCR:</span> '
-                f'<span style="color:#e0e0e0; font-size:12px;">{data2.get("approximate_dcr"):.2f} mΩ</span>'
-                f'</div>'
-            )
-        else:
-            return (
-                f'<div style="text-align: center;">'
-                f'<span style="color:#4CAF50; font-weight:bold; font-size:18px;">'
-                f'预测线圈信息</span><br><br>'
-
-                f'<span style="color:#4CAF50; font-size:12px;">目标料号:</span> '
-                f'<span style="color:#e0e0e0; font-size:12px;">{data2.get("target_number", "N/A")}</span><br>'
-
-                f'<span style="color:#4CAF50; font-size:12px;">新圈数:</span> '
-                f'<span style="color:#e0e0e0; font-size:12px;">{data2.get("new_turns", "N/A"):.2f}T</span>'
-                f'</div>'
-            )
-
     def display_partial_results(self, text1=None, text2=None, show_card=True):
         """分别更新两个内容区域"""
         if text1 is not None:
@@ -416,57 +204,6 @@ class XIAO_LAN_Window(QWidget):
         """兼容旧版本的显示方法"""
         self.display_partial_results(text1, text2, show_card=True)
 
-    def build_no_target_input_display(self):
-        """构建无目标输入的显示内容"""
-        return '''
-            <div style="text-align: center; padding: 15px;">
-                <span style="color:#B0BEC5; font-size: 14px;">
-                    ⏳ 等待目标输入
-                </span><br>
-                <span style="color:#757575; font-size: 12px;">
-                    请输入目标料号和目标DCR进行预测
-                </span>
-            </div>
-        '''
-
-    def build_input_error_display(self, error_msg):
-        """构建输入错误的显示内容"""
-        return f'''
-            <div style="padding: 10px;">
-                <span style="color:#FF9800; font-weight:bold; font-size:12px;">
-                    ⚠️ 目标输入错误
-                </span><br>
-                <span style="color:#FFCC80; font-size:11px;">
-                    {error_msg}
-                </span>
-            </div>
-        '''
-
-    def build_target_calculation_error(self, error_msg):
-        """构建目标计算错误的显示内容"""
-        return f'''
-            <div style="padding: 10px;">
-                <span style="color:#FF5252; font-weight:bold; font-size:12px;">
-                    ❌ 预测失败
-                </span><br>
-                <span style="color:#FF8A80; font-size:11px;">
-                    {error_msg}
-                </span>
-            </div>
-        '''
-
-    def build_error_display(self, error_msg):
-        """构建主要错误显示"""
-        return f'''
-            <div style="padding: 20px; text-align: center;">
-                <span style="color:#FF5252; font-weight:bold; font-size:12px;">
-                    ❌ 计算失败
-                </span><br><br>
-                <span style="color:#FF8A80; font-size:11px;">
-                    {error_msg}
-                </span>
-            </div>
-        '''
     def display_error(self, error_msg):
         """显示错误信息"""
         error_html = (
