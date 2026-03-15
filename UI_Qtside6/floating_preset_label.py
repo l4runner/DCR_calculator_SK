@@ -5,14 +5,13 @@ from PySide6.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton, Q
 
 
 class FloatingPresetLabel(QLabel):
-    """固定在右侧的浮动标签"""
-    clicked = Signal(str,str)
+    clicked = Signal(str, str)
 
     def __init__(self, text, model, spec, color="#89dceb", parent=None):
         super().__init__(parent)
         self.text = text
-        self.model = model      # 型号，如 "SPT0530-R33M-BA"
-        self.spec = spec        # 规格，如 "0.35*1.00*2.20*2.75T"
+        self.model = model
+        self.spec = spec
         self.color = color
         self.is_hovered = False
         self.float_distance = 2
@@ -22,7 +21,6 @@ class FloatingPresetLabel(QLabel):
         QTimer.singleShot(100, self.set_fixed_original_pos)
 
     def init_ui(self):
-        """初始化UI"""
         self.setText(self.text)
         self.setAlignment(Qt.AlignCenter)
 
@@ -44,12 +42,10 @@ class FloatingPresetLabel(QLabel):
         self.pos_animation.setEasingCurve(QEasingCurve.OutCubic)
 
     def set_fixed_original_pos(self):
-        """设置固定的原始位置（只调用一次）"""
         if self.original_pos is None:
             self.original_pos = self.pos()
 
     def set_position(self, x, y):
-        """设置标签位置，并更新原始位置"""
         self.move(x, y)
         self.original_pos = QPoint(x, y)
 
@@ -75,7 +71,6 @@ class FloatingPresetLabel(QLabel):
         super().enterEvent(event)
 
     def leaveEvent(self, event):
-        """鼠标离开事件"""
         self.is_hovered = False
 
         if self.original_pos is not None:
@@ -112,7 +107,6 @@ class FloatingPresetLabel(QLabel):
         super().mousePressEvent(event)
 
     def mouseReleaseEvent(self, event):
-        """鼠标释放事件"""
         if event.button() == Qt.LeftButton:
             if self.is_hovered:
                 self.setStyleSheet(f"""
@@ -141,14 +135,12 @@ class FloatingPresetLabel(QLabel):
         super().mouseReleaseEvent(event)
 
     def animate_position(self, pos):
-        """动画移动位置"""
         self.pos_animation.stop()
         self.pos_animation.setStartValue(self.pos())
         self.pos_animation.setEndValue(pos)
         self.pos_animation.start()
 
     def create_right_floating_presets(self):
-        """创建靠右浮动的预设标签容器"""
         container = QWidget()
         container.setFixedHeight(45)
 
@@ -199,18 +191,19 @@ if __name__ == "__main__":
         labels_data = [
             ("🔧 04系列", "SPT0420-2R2M-BA", "0.20*0.80*1.60*3.75T", "#89dceb"),
             ("📱 05系列", "SPT0530-R33M-BA", "0.35*1.00*2.20*2.75T", "#cba6f7"),
-            ("⚡ 06系列", "SPT0620-2R2M-BA", "0.20*0.80*1.60*3.75T",  "#f38ba8"),
+            ("⚡ 06系列", "SPT0620-2R2M-BA", "0.20*0.80*1.60*3.75T", "#f38ba8"),
         ]
         created_labels = []
         title_label = QLabel("快速规格预设", window)
-        title_label.setStyleSheet("color: #89dceb; font-size: 12px; font-weight: bold;background: transparent; border: none; ")
+        title_label.setStyleSheet(
+            "color: #89dceb; font-size: 12px; font-weight: bold;background: transparent; border: none; ")
         title_label.setAttribute(Qt.WA_TransparentForMouseEvents)
         title_width = title_label.sizeHint().width()
         x_pos = window.width() - title_width - 55
         y_pos = 140
         title_label.move(x_pos, y_pos)
 
-        for name, model,spec, color in labels_data:
+        for name, model, spec, color in labels_data:
             label = FloatingPresetLabel(name, model, spec, color, window)
             created_labels.append(label)
 
@@ -231,7 +224,6 @@ if __name__ == "__main__":
         window.resizeEvent = on_resize
 
     def resize_labels():
-        """重新调整标签位置到右侧"""
         right_margin = 10
         vertical_spacing = 45
         start_y = 80

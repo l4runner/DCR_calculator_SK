@@ -1,11 +1,12 @@
 from PySide6.QtWidgets import (
-    QWidget, QPushButton,QVBoxLayout, QLabel
+    QWidget, QPushButton, QVBoxLayout, QLabel
 )
 from PySide6.QtCore import (
     Qt, QPropertyAnimation, QRect, QEasingCurve, QPoint, QAbstractAnimation
 )
 from PySide6.QtGui import QFont, QPainter, QLinearGradient, QColor, QPen
 from PySide6.QtWidgets import QGraphicsOpacityEffect
+
 
 class ResultCard(QWidget):
     def __init__(self, main_window):
@@ -24,7 +25,7 @@ class ResultCard(QWidget):
             background: #1e1e2e;
             border: 1px solid #3a3a3a;
             border-radius: 10px;
-            box-shadow: 6px 6px 20px rgba(0,0,0,0.4), 
+            box-shadow: 6px 6px 20px rgba(0,0,0,0.4),
                        inset 0 -1px 3px rgba(0,0,0,0.3);
         """)
 
@@ -46,10 +47,8 @@ class ResultCard(QWidget):
         text1 = (
             '<span style="color:#4CAF50; font-weight:bold; font-size:24px;">DCR: 16.326 mΩ</span>'
             '<br><br>'
-
             '<span style="color:#4CAF50; font-weight:normal; font-size:12px;">DCR±5%: 15.509 ~ 17.142 mΩ</span>'
             '<br>'
-
             '<span style="color:#4CAF50; font-weight:normal; font-size:12px;">SK料号: SPT0530-R27M-BA</span>'
             '<br>'
         )
@@ -65,10 +64,8 @@ class ResultCard(QWidget):
         text2 = (
             '<span style="color:#4CAF50; font-weight:bold; font-size:18px;">预估线圈规格: 0.10*1.00*2.20*1.75 T </span>'
             '<br><br>'
-            
             '<span style="color:#4CAF50; font-weight:normal; font-size:12px;">DCR: 16.326 mΩ</span>'
             '<br>'
-            
             '<span style="color:#4CAF50; font-weight:normal; font-size:12px;">SK料号: SPT0516-R68M-BA</span>'
             '<br>'
         )
@@ -105,9 +102,7 @@ class ResultCard(QWidget):
         self.anim_geo = None
         self.anim_opacity = None
 
-
     def _get_target_rect(self):
-        """计算卡片应该在的位置（相对于主窗口右侧居中）"""
         parent_geo = self.main_window.geometry()
         parent_global = self.main_window.mapToGlobal(QPoint(0, 0))
         card_left = parent_global.x() + parent_geo.width()
@@ -178,7 +173,6 @@ class ResultCard(QWidget):
         self.content_label.setText(text)
 
     def update_position(self):
-        """仅更新位置，不动画（用于主窗口移动时同步）"""
         if not self.isVisible():
             return
         if (self.anim_geo and self.anim_geo.state() == QAbstractAnimation.Running) or \
@@ -195,12 +189,11 @@ class ResultCard(QWidget):
                (self.anim_opacity and self.anim_opacity.state() == QAbstractAnimation.Running)
 
     def changeEvent(self, e):
-        """ResultCard 被激活时，同步激活主窗口"""
         super().changeEvent(e)
         if self.isActiveWindow() and self.main_window:
-            # 当 ResultCard 被点击激活时，把主窗口也提到前面
             self.main_window.raise_()
             self.raise_()
+
 
 class GradientLabel(QLabel):
     def __init__(self, text="", parent=None):

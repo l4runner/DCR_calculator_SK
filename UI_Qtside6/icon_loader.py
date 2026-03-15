@@ -1,9 +1,8 @@
-# UI_Qtside6/icon_loader.py
 import os
 from PySide6.QtGui import QIcon, QPixmap
 
+
 class IconLoader:
-    """图标加载器"""
     _instance = None
 
     def __new__(cls):
@@ -13,7 +12,6 @@ class IconLoader:
         return cls._instance
 
     def _init_icons(self):
-        """初始化图标路径"""
         current_dir = os.path.dirname(os.path.abspath(__file__))
         self.project_root = os.path.dirname(current_dir)
         self.icon_dir = os.path.join(self.project_root, "asset", "icon")
@@ -28,7 +26,6 @@ class IconLoader:
         }
 
     def get_icon(self, icon_name, size=None):
-        """获取图标"""
         if icon_name not in self.icon_files:
             return QIcon()
 
@@ -47,7 +44,6 @@ class IconLoader:
         return icon
 
     def get_pixmap(self, icon_name, width=None, height=None):
-        """获取QPixmap"""
         if icon_name not in self.icon_files:
             return QPixmap()
 
@@ -68,12 +64,12 @@ class IconLoader:
         return pixmap
 
     def list_available_icons(self):
-        """列出所有可用图标"""
         available = []
         for name, filename in self.icon_files.items():
             path = os.path.join(self.icon_dir, filename)
             if os.path.exists(path):
                 available.append((name, filename))
         return available
+
 
 icon_loader = IconLoader()

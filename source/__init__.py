@@ -1,4 +1,3 @@
-# source/__init__.py
 from .spec_parser import extract_product_size_from_part_number, parse_coil_spec, CoilSpec
 from .coil_calculator import (
     calculate_dcr_with_inferred_flange,

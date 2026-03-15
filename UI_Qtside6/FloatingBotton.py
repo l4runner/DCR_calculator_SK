@@ -2,6 +2,7 @@ from PySide6.QtWidgets import QGraphicsDropShadowEffect, QPushButton
 from PySide6.QtCore import QPropertyAnimation, QEasingCurve, QPoint, Qt, QTimer, Signal, QSize
 from PySide6.QtGui import QFont, QColor, QIcon
 
+
 class FloatingLabel_Btn(QPushButton):
 
     def __init__(self, text="", icon_path=None, parent=None):
@@ -19,7 +20,7 @@ class FloatingLabel_Btn(QPushButton):
                 padding: 10px; 
                 border-radius: 5px;
                 text-align: center;
-                spacing: 8px;  /* 图标和文字之间的间距 */
+                spacing: 8px;
             }
             QPushButton:hover {
                 background-color: #585b70;
@@ -41,7 +42,6 @@ class FloatingLabel_Btn(QPushButton):
         self.is_fading_out = False
 
     def init_ui(self):
-        """初始化UI，设置图标和文本"""
         if self.icon_path:
             self.setIcon(QIcon(self.icon_path))
             self.setIconSize(QSize(25, 25))
@@ -51,7 +51,6 @@ class FloatingLabel_Btn(QPushButton):
             self.setText(self.text)
 
     def set_icon(self, icon_path):
-        """动态设置图标"""
         self.icon_path = icon_path
         if icon_path:
             self.setIcon(QIcon(icon_path))
@@ -89,14 +88,12 @@ class FloatingLabel_Btn(QPushButton):
         super().mouseReleaseEvent(event)
 
     def animate_position(self, pos):
-        """动画移动整个按钮"""
         self.pos_animation.stop()
         self.pos_animation.setStartValue(self.pos())
         self.pos_animation.setEndValue(pos)
         self.pos_animation.start()
 
     def show_shadow(self):
-        """显示阴影并开始淡出"""
         if self.shadow is None:
             self.shadow = QGraphicsDropShadowEffect()
             self.shadow.setColor(QColor(255, 255, 255, 220))
@@ -112,7 +109,6 @@ class FloatingLabel_Btn(QPushButton):
         self.shadow_timer.start(50)
 
     def update_shadow_opacity(self):
-        """更新阴影透明度（淡出效果）"""
         if self.shadow and self.current_shadow_alpha > 0:
             self.current_shadow_alpha -= 20
 

@@ -1,7 +1,6 @@
 import sys
 import os
 
-# 添加项目根目录到 sys.path，确保模块导入正常工作
 _current_dir = os.path.dirname(os.path.abspath(__file__))
 _project_root = os.path.dirname(_current_dir)
 if _project_root not in sys.path:
@@ -33,9 +32,6 @@ icon_path = os.path.abspath(icon_path)
 
 
 def create_title_widgets(parent):
-    """返回 (主标题, 副标题) 两个 QLabel，不创建布局"""
-
-
     f_biao_ti = QLabel("　　通过参考料号/线圈推算需求料号和目标DCR推荐线圈规格。", parent)
     f_biao_ti.setWordWrap(True)
     f_biao_ti.setAlignment(Qt.AlignTop)
@@ -66,7 +62,7 @@ class XIAO_LAN_Window(QWidget):
         self.setStyleSheet("background-color: #1e1e2e; color: #cdd6f4;")
 
         main_layout = QVBoxLayout()
-        main_layout.setContentsMargins(15,20,15,20)
+        main_layout.setContentsMargins(15, 20, 15, 20)
         main_layout.setSpacing(20)
 
         title_widget = QWidget()
@@ -96,7 +92,6 @@ class XIAO_LAN_Window(QWidget):
         self.setLayout(main_layout)
 
     def create_preset_button(self, name, spec, color):
-        """创建预设按钮"""
         btn = QPushButton(name)
         btn.setToolTip(f"点击应用:\n{spec}")
 
@@ -127,13 +122,11 @@ class XIAO_LAN_Window(QWidget):
         return btn
 
     def apply_preset_spec(self, spec):
-        """应用预设规格"""
         if hasattr(self, "spec_edit"):
             self.spec_edit.setText(spec)
             self._show_preset_applied_effect()
 
     def _show_preset_applied_effect(self):
-        """预设应用后的视觉反馈（可扩展为动画/提示）"""
         pass
 
     def on_calculate(self):
@@ -168,7 +161,6 @@ class XIAO_LAN_Window(QWidget):
             self.display_partial_results(error_html, "", show_card=True)
 
     def get_and_validate_inputs(self):
-        """获取并验证输入"""
         part_number = self.part_edit.text().strip()
         spec_str = self.spec_edit.text().strip()
 
@@ -178,7 +170,6 @@ class XIAO_LAN_Window(QWidget):
         return part_number, spec_str
 
     def get_target_inputs(self):
-        """获取目标输入（可选）"""
         target_number = self.target_part_field.text().strip() if hasattr(self, 'target_part_field') else ""
         target_dcr_str = self.target_DCR_field.text().strip() if hasattr(self, 'target_DCR_field') else ""
 
@@ -194,7 +185,6 @@ class XIAO_LAN_Window(QWidget):
         return target_number, target_dcr
 
     def display_partial_results(self, text1=None, text2=None, show_card=True):
-        """分别更新两个内容区域"""
         if text1 is not None:
             self.result_card.content_label.clear()
             self.result_card.content_label.setText(text1)
@@ -207,36 +197,31 @@ class XIAO_LAN_Window(QWidget):
             self.result_card.show_card()
 
     def display_results(self, text1, text2=None):
-        """兼容旧版本的显示方法"""
         self.display_partial_results(text1, text2, show_card=True)
 
     def display_error(self, error_msg):
-        """显示错误信息"""
         error_html = (
             f'<div style="margin-bottom: 15px;">'
             f'<span style="color:#FF5252; font-weight:bold; font-size:12px; '
             f'background-color: rgba(255, 82, 82, 0.1); padding: 3px 10px; border-radius: 3px;">'
             f'❌ 错误区</span>'
             f'</div>'
-
             f'<span style="color:#FF5252; font-size:16px;">计算失败</span><br><br>'
             f'<span style="color:#FF8A80; font-size:14px;">{error_msg}</span><br><br>'
             f'<span style="color:#B0BEC5; font-size:12px;">请检查输入后重试</span>'
         )
 
         self.result_card.content_label.clear()
-
         self.result_card.content_label.setText(error_html)
         self.result_card.show_card()
 
     def create_horizontal_inputs(self, parent):
-        """创建横向输入框区域"""
         container = QWidget(parent)
         h_layout = QHBoxLayout(container)
         h_layout.setSpacing(20)
         h_layout.setContentsMargins(0, 0, 0, 0)
 
-        self.target_part_field  = UnderlineEdit("目标料号", container)
+        self.target_part_field = UnderlineEdit("目标料号", container)
         self.target_DCR_field = UnderlineEdit("DCR(TYP)mΩ", container)
 
         for edit in (self.target_part_field, self.target_DCR_field):
@@ -251,7 +236,6 @@ class XIAO_LAN_Window(QWidget):
         return container
 
     def create_button_section(self):
-        """创建按钮区域"""
         button_widget = QWidget()
         layout = QHBoxLayout(button_widget)
         layout.setSpacing(20)
@@ -286,51 +270,42 @@ class XIAO_LAN_Window(QWidget):
 
         return button_widget
 
-
     def clear_inputs(self):
-        """清除所有输入框"""
         self.part_edit.clear()
         self.spec_edit.clear()
         self.target_part_field.clear()
         self.target_DCR_field.clear()
 
     def moveEvent(self, e):
-        """窗口移动时更新 ResultCard 位置"""
         super().moveEvent(e)
         if hasattr(self, 'result_card') and self.result_card and self.result_card.isVisible():
             self.result_card.update_position()
 
     def resizeEvent(self, e):
-        """窗口大小变化时更新 ResultCard 位置"""
         super().resizeEvent(e)
         if hasattr(self, 'result_card') and self.result_card and self.result_card.isVisible():
             self.result_card.update_position()
 
     def closeEvent(self, e):
-        """关闭窗口时同时关闭 ResultCard"""
         if hasattr(self, 'result_card') and self.result_card:
             self.result_card.close()
         e.accept()
 
     def hideEvent(self, e):
-        """窗口隐藏时同时隐藏 ResultCard"""
         super().hideEvent(e)
         if hasattr(self, 'result_card') and self.result_card:
             self._result_card_was_visible = self.result_card.isVisible()
             self.result_card.hide()
 
     def showEvent(self, e):
-        """窗口显示时恢复 ResultCard 状态"""
         super().showEvent(e)
         if hasattr(self, 'result_card') and self.result_card:
             if getattr(self, '_result_card_was_visible', False):
                 self.result_card.show_card()
 
     def changeEvent(self, e):
-        """窗口状态变化时处理 ResultCard"""
         super().changeEvent(e)
         if hasattr(self, 'result_card') and self.result_card and self.result_card.isVisible():
-            # 当主窗口激活时，将 ResultCard 也提到前面，但不强制置顶
             if self.isActiveWindow():
                 self.result_card.raise_()
                 self.raise_()
@@ -343,7 +318,7 @@ class XIAO_LAN_Window(QWidget):
         ]
         created_labels = []
 
-        title_label = QLabel("快速规格预设", self)  # ← parent 是 self
+        title_label = QLabel("快速规格预设", self)
         title_label.setStyleSheet("""
             color: #89dceb;
             font-size: 12px;
@@ -386,10 +361,10 @@ class XIAO_LAN_Window(QWidget):
         self.resizeEvent = on_resize
 
     def on_preset_clicked(self, model: str, spec: str):
-        """当点击浮动预设标签时，自动填充输入框"""
         if hasattr(self, 'part_edit') and hasattr(self, 'spec_edit'):
             self.part_edit.setText(model)
             self.spec_edit.setText(spec)
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

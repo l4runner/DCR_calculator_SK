@@ -1,10 +1,7 @@
 import re
 
+
 def extract_inductance_code_from_part_number(part_number: str) -> str:
-    """
-    从完整料号（如 'SPA0550-R50M-BA'）中提取电感编码部分（如 'R50M'）
-    规则：按 '-' 分割，优先匹配正则，其次匹配含 R/L/UH/NH/MH 的段，最后回退到 parts[-2]
-    """
     if not part_number:
         return ""
     part_number = part_number.strip()
@@ -16,7 +13,6 @@ def extract_inductance_code_from_part_number(part_number: str) -> str:
     if len(parts) == 2:
         return parts[1].strip().upper()
 
-    # len(parts) >= 3：优先正则，其次关键词回退
     INDUCTANCE_KEYWORDS = ("R", "L", "UH", "NH", "MH")
     for part in parts[1:]:
         clean_part = part.strip().upper()
@@ -28,20 +24,8 @@ def extract_inductance_code_from_part_number(part_number: str) -> str:
             return clean_part
     return parts[-2].strip().upper()
 
-def parse_inductance_code(code: str) -> dict:
-    """
-    解析电感值编码（如 'R12M', '100L', '2R2K' 等）
 
-    返回：
-        {
-            "value_uh": float,      # 标称电感值（单位：μH）
-            "tolerance_pct": float, # 容差百分比（如 20.0）
-            "min_uh": float,        # 下限 = value * (1 - tol/100)
-            "max_uh": float,        # 上限 = value * (1 + tol/100)
-            "raw_code": str,
-            "formatted": str        # 如 "0.12±20%"
-        }
-    """
+def parse_inductance_code(code: str) -> dict:
     if not code or not isinstance(code, str):
         raise ValueError("输入编码不能为空且必须是字符串")
 
@@ -103,14 +87,3 @@ def parse_inductance_code(code: str) -> dict:
         "raw_code": code,
         "formatted": formatted
     }
-
-# if __name__ == "__main__":
-#     try:
-#         code = extract_inductance_code_from_part_number("SPT0530-R27M-BA")
-#         result = parse_inductance_code(code)
-#         print(
-#             f"{code:4} → {result['formatted']:4} | "
-#             f"范围: [{result['min_uh']:.3f}, {result['max_uh']:.3f}] μH"
-#         )
-#     except Exception as e:
-#         print(f"❌ {e}")

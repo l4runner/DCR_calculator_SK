@@ -1,11 +1,11 @@
-# source/T_core_calculator.py
 import math
 
+
 def ceiling(value: float, significance: float = 0.05) -> float:
-    """模拟 Excel 的 CEILING(value, significance)"""
     if significance <= 0:
         raise ValueError("significance 必须大于 0")
     return math.ceil(value / significance) * significance
+
 
 def wire_thickness_judge(wire_thickness_mm: float) -> float | None:
     if wire_thickness_mm >= 0.4:
@@ -18,6 +18,7 @@ def wire_thickness_judge(wire_thickness_mm: float) -> float | None:
         return 0.87
     return None
 
+
 def estimate_wire_corner_radius(wire_thickness_mm: float) -> float:
     if wire_thickness_mm < 0.2:
         r_factor = 0.12
@@ -26,7 +27,8 @@ def estimate_wire_corner_radius(wire_thickness_mm: float) -> float:
     else:
         r_factor = 0.20
     max_r = wire_thickness_mm / 2.0
-    return min(r_factor , max_r)
+    return min(r_factor, max_r)
+
 
 def add_enamel_to_wire_thickness(copper_thickness_mm: float) -> float:
     if copper_thickness_mm >= 0.50:
@@ -37,6 +39,7 @@ def add_enamel_to_wire_thickness(copper_thickness_mm: float) -> float:
         return copper_thickness_mm + 0.03
     else:
         return copper_thickness_mm + 0.02
+
 
 def estimate_compressed_coil_height(
         wire_thickness_mm: float,
@@ -49,6 +52,7 @@ def estimate_compressed_coil_height(
     ratio = wire_thickness_judge(total_thickness)
     return ratio * turns_int * total_thickness
 
+
 def estimate_flange_thickness(
         product_height_mm: float,
         compressed_coil_height_mm: float
@@ -58,18 +62,20 @@ def estimate_flange_thickness(
     raw_flange = (product_height_mm - compressed_coil_height_mm) / 2.0 / 0.80
     return math.ceil(raw_flange / 0.05) * 0.05
 
+
 def central_column_height(
         product_height_mm: float,
 ) -> float:
     raw_flange = (product_height_mm + 0.15) / 0.70
     return math.ceil(raw_flange / 0.05) * 0.05
 
+
 def central_column_height_2(
         coil_thickness_total: float,
         turns_2: float
 ) -> float:
     turns_int = math.ceil(turns_2)
-    fu_zhi  = add_enamel_to_wire_thickness(coil_thickness_total)
+    fu_zhi = add_enamel_to_wire_thickness(coil_thickness_total)
     return ceiling((fu_zhi * turns_int) / 0.89 + 0.20)
 
 
@@ -78,20 +84,6 @@ def calculate_lead_length(
     flange_thickness_mm: float,
     compressed_coil_height_mm: float
 ) -> float:
-    """
-    计算引脚总长度（mm），考虑高低脚差异
-
-    公式：
-        L_total = 2 × (产品半宽 + 摆厚) + 线圈高度
-
-    参数:
-        width_mm: 产品宽度 (mm)
-        flange_thickness_mm: T-core 摆厚 (mm)
-        compressed_coil_height_mm: 压缩后线圈高度 (mm)
-
-    返回:
-        引脚总长度 (mm)
-    """
     half_width = width_mm / 2.0
     return 2 * (half_width + flange_thickness_mm) + compressed_coil_height_mm
 
@@ -101,37 +93,5 @@ def calculate_coil_length(
     inner_diameter_mm: float,
     turns_2: int
 ) -> float:
-    """
-    计算线圈导体长度（mm），固定直径模型
-
-    公式：
-        L_coil = π × N × (内径 + 线宽)
-    """
     avg_diameter_mm = inner_diameter_mm + wire_width_mm
     return math.pi * turns_2 * avg_diameter_mm
-
-# if __name__ == "__main__":
-#
-#     wire_thickness = 0.65
-#     turns = 1.75
-#     product_height = 2.25
-#     product_width = 5.5
-#     inner_diameter = 2.2
-#     wire_width = 1.0
-#
-#     print("🔧 T-core 计算器 - 手动调试模式")
-#     print("=" * 40)
-#     aa = wire_thickness_judge(0.18)
-#     compressed_h = estimate_compressed_coil_height(wire_thickness, turns)
-#     print(f"压缩后线圈高度: {aa:.3f} mm")
-#     flange = estimate_flange_thickness(product_height, compressed_h)
-#     print(f"摆厚: {flange:.3f} mm")
-#     Column_Height = central_column_height_2(wire_thickness,turns)
-#     print(f"中柱: {Column_Height:.2f} mm")
-#     Tot0le_Height = Column_Height + flange
-#     print(f"总高: {Tot0le_Height:.3f} mm")
-#     lead_len = calculate_lead_length(product_width, flange, compressed_h)
-#     print(f"引脚总长度: {lead_len:.3f} mm")
-#     coil_len = calculate_coil_length(wire_width, inner_diameter, math.ceil(turns))
-#     print(f"线圈导体长度: {coil_len:.3f} mm")
-#     print("\n✅ 调试完成！")

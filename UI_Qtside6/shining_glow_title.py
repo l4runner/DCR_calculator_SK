@@ -1,5 +1,3 @@
-# shining_glow_title.py
-
 import sys
 import math
 from PySide6.QtWidgets import QApplication, QWidget, QVBoxLayout
@@ -8,8 +6,6 @@ from PySide6.QtGui import QPainter, QColor, QLinearGradient, QFont, QPainterPath
 
 
 class SmoothBlueCyanGlowTitle(QWidget):
-    """蓝青渐变发光标题组件，可配置尺寸与字体"""
-
     def __init__(
         self,
         text: str = "XIAOLAN",
@@ -48,8 +44,8 @@ class SmoothBlueCyanGlowTitle(QWidget):
             color_t = light_t * 2
         else:
             color_t = 2.0 - light_t * 2
-        color_blue = (35, 100, 255)  # Bright Blue 60, 180, 255
-        color_cyan = (0, 180, 180)  # Cyan 0, 220, 220
+        color_blue = (35, 100, 255)
+        color_cyan = (0, 180, 180)
 
         r = int(color_blue[0] * (1 - color_t) + color_cyan[0] * color_t)
         g = int(color_blue[1] * (1 - color_t) + color_cyan[1] * color_t)
@@ -81,7 +77,6 @@ class SmoothBlueCyanGlowTitle(QWidget):
         painter.drawText(text_rect, Qt.AlignCenter, self.text)
 
 
-# 兼容旧命名
 SmoothBlueCyanGlow_title = SmoothBlueCyanGlowTitle
 
 
@@ -98,6 +93,7 @@ class DemoWindow(QWidget):
         layout.addWidget(self.btn)
 
         self.setLayout(layout)
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

@@ -37,7 +37,7 @@ class UnderlineEdit(QLineEdit):
                 border: none;
                 border-bottom: 2px solid #585b70;
                 color: #cdd6f4;
-                padding: 8px 0 6px 0;   /* 上少下多，视觉下沉 */
+                padding: 8px 0 6px 0;
                 font-size: 14px;
             }
         """)
@@ -135,7 +135,7 @@ class UnderlineEdit(QLineEdit):
             return
         pos = self.mapTo(self.container_parent, QPoint(0, 0))
         label_height = self.floating_label.sizeHint().height()
-        target_y = pos.y() + (self.height() - label_height) // 2 + 2  # +2 对齐下沉光标
+        target_y = pos.y() + (self.height() - label_height) // 2 + 2
         target_pos = QPoint(pos.x(), target_y)
         self.floating_label.move_to(target_pos)
         self.floating_label.setStyleSheet("color: #585b70; font-size: 14px; background: transparent;")

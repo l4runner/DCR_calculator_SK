@@ -1,6 +1,3 @@
-# source/calculator_service.py
-"""计算与展示格式化服务层：抽离业务逻辑，实现 UI 与计算解耦"""
-
 from datetime import datetime
 
 from .spec_parser import extract_product_size_from_part_number, parse_coil_spec
@@ -13,10 +10,6 @@ from .Inductance_parser import parse_inductance_code, extract_inductance_code_fr
 
 
 def perform_dcr_calculation(part_number: str, spec_str: str) -> dict:
-    """
-    执行 DCR 主计算，返回结构化结果。
-    抛出 ValueError 时由调用方处理。
-    """
     product_size = extract_product_size_from_part_number(part_number)
     coil = parse_coil_spec(spec_str)
 
@@ -44,10 +37,6 @@ def perform_target_calculation(
     target_number: str,
     target_dcr: float,
 ) -> dict:
-    """
-    执行目标 DCR 反推计算（卡2），返回预测线圈规格。
-    抛出 ValueError 时由调用方处理。
-    """
     product_size = extract_product_size_from_part_number(part_number)
     product_size1 = extract_product_size_from_part_number(target_number)
 
@@ -78,10 +67,7 @@ def perform_target_calculation(
     }
 
 
-# ---------- 展示格式化 ----------
-
 def format_primary_display(data: dict) -> str:
-    """构建主 DCR 结果 HTML"""
     return (
         f'<div style="text-align: center;">'
         f'<span style="color:#4CAF50; font-weight:bold; font-size:24px;">'
@@ -96,7 +82,6 @@ def format_primary_display(data: dict) -> str:
 
 
 def format_target_display(data: dict) -> str:
-    """构建目标预测结果 HTML"""
     if data.get("wire_thickness"):
         return (
             f'<div style="text-align: center;">'
@@ -121,7 +106,6 @@ def format_target_display(data: dict) -> str:
 
 
 def format_error_display(message: str) -> str:
-    """构建主错误 HTML"""
     return f"""
         <div style="padding: 20px; text-align: center;">
             <span style="color:#FF5252; font-weight:bold; font-size:12px;">
@@ -135,7 +119,6 @@ def format_error_display(message: str) -> str:
 
 
 def format_no_target_display() -> str:
-    """构建无目标输入提示 HTML"""
     return """
         <div style="text-align: center; padding: 15px;">
             <span style="color:#B0BEC5; font-size: 14px;">
@@ -149,7 +132,6 @@ def format_no_target_display() -> str:
 
 
 def format_input_error_display(error_msg: str) -> str:
-    """构建目标输入错误 HTML"""
     return f"""
         <div style="padding: 10px;">
             <span style="color:#FF9800; font-weight:bold; font-size:12px;">
@@ -163,7 +145,6 @@ def format_input_error_display(error_msg: str) -> str:
 
 
 def format_target_calculation_error(error_msg: str) -> str:
-    """构建目标计算错误 HTML"""
     return f"""
         <div style="padding: 10px;">
             <span style="color:#FF5252; font-weight:bold; font-size:12px;">
