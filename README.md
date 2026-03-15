@@ -77,7 +77,7 @@
 
 ```bash
 # 1. 克隆仓库
-git clone <仓库地址>
+git clone https://github.com/l4runner/DCR_calculator_SK
 cd DCR_calculator_SK
 
 # 2. 创建虚拟环境（推荐）
