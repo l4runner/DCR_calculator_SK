@@ -385,7 +385,7 @@ git push origin feature/new-feature
 ```
 MIT License
 
-Copyright (c) 2026 [作者]
+Copyright (c) 2026 LanYupo
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
